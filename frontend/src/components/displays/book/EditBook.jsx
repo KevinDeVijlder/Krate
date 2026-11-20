@@ -1,24 +1,43 @@
+﻿import { useState, useEffect } from "react";
 import {
   Box,
   Button,
   TextField,
   Typography,
   Alert,
-  IconButton,
+  Paper,
+  MenuItem,
+  Chip,
 } from "@mui/material";
-import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../../../AppContext";
-import Delete from "@mui/icons-material/Delete";
+import { API_URL, resolveCoverUrl } from "../../../api/client";
+import { CoverImagePicker, PLEX_GOLD } from "../../common/PlexComponents";
+
+const BOOK_FORMATS = [
+  "Hardcover",
+  "Paperback",
+  "Mass Market Paperback",
+  "Deluxe / Illustrated Hardcover",
+  "Manga / Graphic Novel",
+  "eBook (Kindle / EPUB)",
+  "Audiobook (Audible)",
+];
+
+const BOOK_STATUSES = [
+  "Owned",
+  "Owned â€¢ Unread",
+  "Owned â€¢ Reading",
+  "Owned â€¢ Read",
+  "Loaned Out",
+  "Wishlist",
+];
 
 export default function EditBook() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const API = "http://localhost:3001";
   const { triggerRefresh, notifySuccess } = useApp();
-  const ACCENT = "#FF6D00";
 
-  // Form fields
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [description, setDescription] = useState("");
@@ -30,80 +49,81 @@ export default function EditBook() {
   const [publicationYear, setPublicationYear] = useState("");
   const [format, setFormat] = useState("");
   const [genre, setGenre] = useState("");
+  const [ownershipType, setOwnershipType] = useState("Physical");
+  const [platform, setPlatform] = useState("");
+  const [edition, setEdition] = useState("");
+  const [rating, setRating] = useState("");
+  const [status, setStatus] = useState("Owned");
+  const [location, setLocation] = useState("");
+  const [condition, setCondition] = useState("");
 
-  // Image handling
-  const [imageFile, setImageFile] = useState(null); // new uploaded file
-  const [previewUrl, setPreviewUrl] = useState(null); // currently displayed image
-
+  const [imageFile, setImageFile] = useState(null);
+  const [coverUrlInput, setCoverUrlInput] = useState("");
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [removeCover, setRemoveCover] = useState(false);
   const [error, setError] = useState(null);
 
-  const fieldSx = {
-    "& .MuiOutlinedInput-root.Mui-focused fieldset": { borderColor: ACCENT },
-    "& .MuiInputLabel-root.Mui-focused": { color: ACCENT },
-  };
-
-  // Fetch existing book
   useEffect(() => {
-    const fetchBook = async () => {
-      try {
-        const res = await fetch(`${API}/books/${id}`);
-        if (!res.ok) throw new Error("Book not found");
-        const data = await res.json();
-
+    fetch(`${API_URL}/books/${id}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Book not found");
+        return r.json();
+      })
+      .then((data) => {
         setTitle(data.title || "");
         setSubtitle(data.subtitle || "");
         setDescription(data.description || "");
         setAuthor(data.author || "");
         setPublisher(data.publisher || "");
         setIsbn(data.isbn || "");
-        setPageCount(data.page_count || "");
+        setPageCount(data.page_count ?? "");
         setLanguage(data.language || "");
-        setPublicationYear(data.publication_year || "");
+        setPublicationYear(data.publication_year ?? "");
         setFormat(data.format || "");
         setGenre(data.genre || "");
+        setOwnershipType(data.ownership_type || "Physical");
+        setPlatform(data.platform || "");
+        setEdition(data.edition || "");
+        setRating(data.rating ?? "");
+        setStatus(data.status || "Owned");
+        setLocation(data.location || "");
+        setCondition(data.condition || "");
 
-        // set existing cover image as preview
         if (data.cover_url) {
-          const url = data.cover_url.startsWith("http")
-            ? data.cover_url
-            : `${API}/${data.cover_url}`;
-          setPreviewUrl(url);
+          setPreviewUrl(resolveCoverUrl(data.cover_url));
+          if (data.cover_url.startsWith("http")) setCoverUrlInput(data.cover_url);
         }
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load book");
-      }
-    };
-    fetchBook();
+      })
+      .catch(() => setError("Failed to load book"));
   }, [id]);
 
-  // Update preview when a new file is selected
   useEffect(() => {
     if (!imageFile) return;
-
     const url = URL.createObjectURL(imageFile);
     setPreviewUrl(url);
-
+    setRemoveCover(false);
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
 
   const handleRemoveImage = () => {
     setImageFile(null);
     setPreviewUrl(null);
+    setCoverUrlInput("");
+    setRemoveCover(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    if (!title) return setError("Title is required.");
-    if (!author) return setError("Author is required.");
+    if (!title.trim()) return setError("Title is required.");
+    if (!author.trim()) return setError("Author is required.");
 
     const formData = new FormData();
-    formData.append("title", title);
+    formData.append("title", title.trim());
     formData.append("subtitle", subtitle);
     formData.append("description", description);
-    formData.append("author", author);
+    formData.append("author", author.trim());
     formData.append("publisher", publisher);
     formData.append("isbn", isbn);
     formData.append("page_count", pageCount);
@@ -111,18 +131,26 @@ export default function EditBook() {
     formData.append("publication_year", publicationYear);
     formData.append("format", format);
     formData.append("genre", genre);
-
+    formData.append("ownership_type", ownershipType);
+    formData.append("platform", platform);
+    formData.append("edition", edition);
+    formData.append("rating", rating);
+    formData.append("status", status);
+    formData.append("location", location);
+    formData.append("condition", condition);
+    if (removeCover) formData.append("remove_cover", "true");
+    if (coverUrlInput.trim()) formData.append("cover_url_input", coverUrlInput.trim());
     if (imageFile) formData.append("image", imageFile);
 
     try {
-      const res = await fetch(`${API}/books/${id}`, {
+      const res = await fetch(`${API_URL}/books/${id}`, {
         method: "PUT",
         body: formData,
       });
       if (!res.ok) throw new Error("Update failed");
 
       triggerRefresh();
-      notifySuccess("Book updated");
+      notifySuccess("Book updated!");
       navigate(`/books/${id}`);
     } catch (err) {
       console.error(err);
@@ -131,13 +159,13 @@ export default function EditBook() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1300, mx: "auto" }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
+    <Box sx={{ maxWidth: 1240, mx: "auto", pb: 6 }}>
+      <Typography variant="h4" sx={{ fontWeight: 800, mb: 2 }}>
         Edit Book
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
@@ -145,226 +173,207 @@ export default function EditBook() {
       <Box
         sx={{
           display: "flex",
-          gap: { xs: 2, md: 4 },
+          gap: 3.5,
           flexDirection: { xs: "column", md: "row" },
-          alignItems: "stretch",
+          alignItems: "flex-start",
         }}
       >
-        {/* FORM */}
-        <Box
+        <Paper
           component="form"
           onSubmit={handleSubmit}
-          sx={{
-            flex: 1,
-            bgcolor: "background.paper",
-            p: 3,
-            borderRadius: 3,
-            boxShadow: "0 8px 22px rgba(2,6,23,0.10)",
-          }}
+          sx={{ flex: 1, p: { xs: 2.5, md: 3.5 }, borderRadius: 3, width: "100%" }}
         >
-          <TextField
-            fullWidth
-            label="Title"
-            size="small"
-            sx={{ mb: 2, ...fieldSx }}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Subtitle"
-            size="small"
-            sx={{ mb: 2, ...fieldSx }}
-            value={subtitle}
-            onChange={(e) => setSubtitle(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            multiline
-            rows={6}
-            label="Description"
-            size="small"
-            sx={{ mb: 2, ...fieldSx }}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Author"
-            size="small"
-            sx={{ mb: 2, ...fieldSx }}
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-          />
-          <TextField
-            fullWidth
-            label="Publisher"
-            size="small"
-            sx={{ mb: 2, ...fieldSx }}
-            value={publisher}
-            onChange={(e) => setPublisher(e.target.value)}
-          />
+          <Typography variant="overline" sx={{ color: PLEX_GOLD, fontWeight: 800 }}>
+            Bibliographic Metadata
+          </Typography>
 
-          <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "3fr 2fr" }, gap: 2, mt: 1, mb: 2 }}>
+            <TextField
+              label="Book Title *"
+              size="small"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            <TextField
+              label="Subtitle"
+              size="small"
+              value={subtitle}
+              onChange={(e) => setSubtitle(e.target.value)}
+            />
+          </Box>
+
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2, mb: 2 }}>
+            <TextField
+              label="Author *"
+              size="small"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+            />
+            <TextField
+              label="Publisher"
+              size="small"
+              value={publisher}
+              onChange={(e) => setPublisher(e.target.value)}
+            />
+          </Box>
+
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(5, 1fr)" }, gap: 2, mb: 3 }}>
             <TextField
               label="ISBN"
               size="small"
-              sx={{ flex: "1 1 160px", ...fieldSx }}
               value={isbn}
               onChange={(e) => setIsbn(e.target.value)}
             />
             <TextField
               type="number"
-              label="Pages"
+              label="Page Count"
               size="small"
-              sx={{ flex: "1 1 120px", ...fieldSx }}
               value={pageCount}
               onChange={(e) => setPageCount(e.target.value)}
             />
             <TextField
+              type="number"
+              label="Publication Year"
+              size="small"
+              value={publicationYear}
+              onChange={(e) => setPublicationYear(e.target.value)}
+            />
+            <TextField
               label="Language"
               size="small"
-              sx={{ flex: "1 1 140px", ...fieldSx }}
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
             />
             <TextField
               type="number"
-              label="Year"
+              label="Rating (0-10)"
+              inputProps={{ step: 0.1, min: 0, max: 10 }}
               size="small"
-              sx={{ flex: "1 1 120px", ...fieldSx }}
-              value={publicationYear}
-              onChange={(e) => setPublicationYear(e.target.value)}
+              value={rating}
+              onChange={(e) => setRating(e.target.value)}
             />
           </Box>
 
-          <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
+          <Typography variant="overline" sx={{ color: PLEX_GOLD, fontWeight: 800 }}>
+            Format & Ownership Details
+          </Typography>
+
+          <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mt: 1, mb: 2 }}>
+            {BOOK_FORMATS.map((fmt) => (
+              <Chip
+                key={fmt}
+                label={fmt}
+                size="small"
+                onClick={() => setFormat(fmt)}
+                sx={{
+                  cursor: "pointer",
+                  bgcolor: format === fmt ? PLEX_GOLD : "rgba(255,255,255,0.06)",
+                  color: format === fmt ? "#FFFFFF" : "#D1D5DB",
+                  fontWeight: 700,
+                }}
+              />
+            ))}
+          </Box>
+
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 2, mb: 2 }}>
+            <TextField
+              select
+              label="Ownership Type"
+              size="small"
+              value={ownershipType}
+              onChange={(e) => setOwnershipType(e.target.value)}
+            >
+              <MenuItem value="Physical">Physical Book</MenuItem>
+              <MenuItem value="Digital">Digital (eBook / Audiobook)</MenuItem>
+            </TextField>
+
             <TextField
               label="Format"
               size="small"
-              sx={{ flex: "1 1 200px", ...fieldSx }}
               value={format}
               onChange={(e) => setFormat(e.target.value)}
             />
+
             <TextField
               label="Genre"
               size="small"
-              sx={{ flex: "1 1 200px", ...fieldSx }}
               value={genre}
               onChange={(e) => setGenre(e.target.value)}
             />
           </Box>
 
-          {/* IMAGE UPLOAD */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              mb: 3,
-              flexWrap: "wrap",
-            }}
-          >
-            <Button
-              variant="contained"
-              component="label"
-              sx={{
-                bgcolor: ACCENT,
-                "&:hover": { bgcolor: "#e65a00" },
-                color: "#fff",
-              }}
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(4, 1fr)" }, gap: 2, mb: 2.5 }}>
+            <TextField
+              label="Edition"
+              size="small"
+              value={edition}
+              onChange={(e) => setEdition(e.target.value)}
+            />
+            <TextField
+              select
+              label="Reading Status"
+              size="small"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
             >
-              Upload Cover
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-              />
-            </Button>
-
-            {previewUrl && (
-              <IconButton
-                size="small"
-                onClick={handleRemoveImage}
-                sx={{ color: ACCENT }}
-              >
-                <Delete fontSize="small" />
-              </IconButton>
-            )}
+              {BOOK_STATUSES.map((s) => (
+                <MenuItem key={s} value={s}>
+                  {s}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label="Bookshelf / Location"
+              size="small"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+            <TextField
+              label="Condition"
+              size="small"
+              value={condition}
+              onChange={(e) => setCondition(e.target.value)}
+            />
           </Box>
 
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{
-                bgcolor: ACCENT,
-                "&:hover": { bgcolor: "#e65a00" },
-                color: "#fff",
-              }}
-            >
-              Update Book
-            </Button>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="Synopsis & Copy Notes"
+            size="small"
+            sx={{ mb: 3 }}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
 
+          <Box sx={{ display: "flex", gap: 1.5 }}>
+            <Button type="submit" variant="contained" sx={{ px: 3 }}>
+              Save Changes
+            </Button>
             <Button
-              type="button"
               variant="outlined"
-              onClick={() => navigate(-1)}
-              sx={{
-                borderColor: ACCENT,
-                color: ACCENT,
-                "&:hover": {
-                  backgroundColor: "rgba(255,109,0,0.08)",
-                  borderColor: ACCENT,
-                },
-              }}
+              onClick={() => navigate(`/books/${id}`)}
+              sx={{ borderColor: "rgba(255,255,255,0.2)", color: "#D1D5DB" }}
             >
               Cancel
             </Button>
           </Box>
-        </Box>
+        </Paper>
 
-        {/* PREVIEW */}
-        <Box sx={{ width: { xs: "100%", md: 360 }, maxWidth: "100%" }}>
-          <Box
-            sx={{
-              position: "relative",
-              width: "100%",
-              paddingTop: "160%",
-              borderRadius: 3,
-              overflow: "hidden",
-              bgcolor: "rgba(2,6,23,0.15)",
-              boxShadow: "0 8px 22px rgba(2,6,23,0.10)",
-            }}
-          >
-            <Box
-              sx={{
-                position: "absolute",
-                inset: 0,
-                display: "grid",
-                placeItems: "center",
-                backgroundImage: previewUrl ? `url(${previewUrl})` : "none",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            >
-              {!previewUrl && (
-                <Box sx={{ textAlign: "center", px: 2 }}>
-                  <Typography sx={{ color: "text.secondary" }}>
-                    Cover preview
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "text.secondary", mt: 1 }}
-                  >
-                    Upload a new image to replace
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          </Box>
-        </Box>
+        <CoverImagePicker
+          imageFile={imageFile}
+          onImageFileChange={setImageFile}
+          coverUrlInput={coverUrlInput}
+          onCoverUrlInputChange={(val) => {
+            setCoverUrlInput(val);
+            if (val.trim()) setRemoveCover(false);
+          }}
+          previewUrl={previewUrl}
+          onRemoveImage={handleRemoveImage}
+          aspectRatio="155%"
+          label="Book Jacket / Cover"
+        />
       </Box>
     </Box>
   );

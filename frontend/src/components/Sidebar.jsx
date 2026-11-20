@@ -1,10 +1,14 @@
-import {
+﻿import {
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Tooltip,
   Box,
+  Typography,
+  Button,
+  Divider,
+  IconButton,
 } from "@mui/material";
 import {
   LocalMovies,
@@ -15,59 +19,110 @@ import {
   Tune,
   Menu,
   MenuOpen,
+  AddCircleOutline,
 } from "@mui/icons-material";
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import CollectionsIcon from '@mui/icons-material/Collections';
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import CollectionsIcon from "@mui/icons-material/Collections";
 import { useNavigate, useLocation } from "react-router-dom";
-import Logo from '../assets/logosmall.png'; // your logo path
-import 'typeface-ubuntu';
+import Logo from "../assets/logosmall.png";
+import { PLEX_GOLD } from "./common/PlexComponents";
 
-const navItems = [
-  { label: "Dashboard", icon: <DashboardIcon />, path: "/" },
-  { label: "Movies", icon: <LocalMovies />, path: "/movies" },
-  { label: "TV Shows", icon: <Tv />, path: "/tvshows" },
-  { label: "Videogames", icon: <SportsEsports />, path: "/videogames" },
-  { label: "Books", icon: <MenuBook />, path: "/books" },
-  { label: "Boardgames", icon: <Casino />, path: "/boardgames" },
-  {label: "Collections", icon: <CollectionsIcon />, path: "/collection" },
+const mainNavItems = [
+  { label: "Home Vault", icon: <DashboardIcon fontSize="small" />, path: "/" },
+];
+
+const libraryNavItems = [
+  { label: "Movies", icon: <LocalMovies fontSize="small" />, path: "/movies" },
+  { label: "TV Shows", icon: <Tv fontSize="small" />, path: "/tvshows" },
+  { label: "Videogames", icon: <SportsEsports fontSize="small" />, path: "/videogames" },
+  { label: "Books", icon: <MenuBook fontSize="small" />, path: "/books" },
+  { label: "Boardgames", icon: <Casino fontSize="small" />, path: "/boardgames" },
+];
+
+const curationNavItems = [
+  { label: "Collections", icon: <CollectionsIcon fontSize="small" />, path: "/collection" },
+  { label: "Vault Settings", icon: <Tune fontSize="small" />, path: "/configuration" },
 ];
 
 export default function Sidebar({ isExpanded, onToggle }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const renderListItem = (item, active = false) => (
-    <Tooltip key={item.label} title={isExpanded ? "" : item.label} placement="right">
-      <ListItemButton
-        onClick={() => navigate(item.path)}
-        sx={{
-          mb: 1,
-          height: 56,
-          bgcolor: active ? "rgba(255,255,255,0.1)" : "transparent",
-          borderLeft: "5px solid transparent",
-          borderLeftColor: active ? "#FF6D00" : "transparent",
-          borderRight: "5px solid transparent", // invisible right border for centering
-          borderRadius: 0.65,
-          "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
-          boxSizing: "border-box",
-          display: "flex",
-          justifyContent: isExpanded ? "flex-start" : "center",
-        }}
-      >
-        <ListItemIcon sx={{ minWidth: 0, color: "#fff", mr: isExpanded ? 2 : 0 }}>
-          {item.icon}
-        </ListItemIcon>
-        {isExpanded && (
-          <ListItemText
-            primary={item.label}
-            primaryTypographyProps={{ sx: { fontFamily: "Ubuntu" } }}
-          />
-        )}
-      </ListItemButton>
-    </Tooltip>
-  );
+  const isRouteActive = (path) => {
+    if (path === "/") return location.pathname === "/";
+    if (path === "/collection") {
+      return (
+        location.pathname.startsWith("/collection") ||
+        location.pathname.startsWith("/add-collection")
+      );
+    }
+    return location.pathname.startsWith(path);
+  };
 
-  
+  const renderListItem = (item) => {
+    const active = isRouteActive(item.path);
+    return (
+      <Tooltip key={item.label} title={isExpanded ? "" : item.label} placement="right">
+        <ListItemButton
+          onClick={() => navigate(item.path)}
+          sx={{
+            mx: 1,
+            mb: 0.5,
+            height: 44,
+            borderRadius: 2,
+            bgcolor: active ? "rgba(51, 140, 255, 0.14)" : "transparent",
+            color: active ? PLEX_GOLD : "#9CA3AF",
+            position: "relative",
+            overflow: "hidden",
+            transition: "all 0.18s ease",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              left: 0,
+              top: 8,
+              bottom: 8,
+              width: 3.5,
+              borderRadius: "0 4px 4px 0",
+              bgcolor: active ? PLEX_GOLD : "transparent",
+              transition: "background-color 0.2s",
+            },
+            "&:hover": {
+              bgcolor: active
+                ? "rgba(51, 140, 255, 0.2)"
+                : "rgba(255, 255, 255, 0.06)",
+              color: active ? PLEX_GOLD : "#F3F4F6",
+            },
+            display: "flex",
+            justifyContent: isExpanded ? "flex-start" : "center",
+            px: isExpanded ? 1.75 : 0,
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: 0,
+              color: "inherit",
+              mr: isExpanded ? 1.75 : 0,
+            }}
+          >
+            {item.icon}
+          </ListItemIcon>
+          {isExpanded && (
+            <ListItemText
+              primary={item.label}
+              primaryTypographyProps={{
+                sx: {
+                  fontFamily: "'Ubuntu', sans-serif",
+                  fontWeight: active ? 700 : 500,
+                  fontSize: "0.9rem",
+                  color: active ? "#FFFFFF" : "inherit",
+                },
+              }}
+            />
+          )}
+        </ListItemButton>
+      </Tooltip>
+    );
+  };
 
   return (
     <Box
@@ -76,74 +131,185 @@ export default function Sidebar({ isExpanded, onToggle }) {
         top: 0,
         left: 0,
         bottom: 0,
-        width: isExpanded ? 200 : 60,
-        bgcolor: "#212121",
+        width: isExpanded ? 230 : 68,
+        bgcolor: "rgba(15, 17, 23, 0.96)",
+        backdropFilter: "blur(20px)",
+        borderRight: "1px solid rgba(255, 255, 255, 0.07)",
         color: "#fff",
         display: "flex",
         flexDirection: "column",
-        transition: "width 0.3s",
-        overflow: "hidden",
+        transition: "width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)",
+        overflowX: "hidden",
+        zIndex: 1200,
       }}
     >
-      {/* Logo */}
+      {/* BRAND HEADER */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: isExpanded ? "flex-start" : "center",
-          p: 1,
-          mb: 1,
+          justifyContent: isExpanded ? "space-between" : "center",
+          px: isExpanded ? 2 : 1,
+          py: 2,
+          minHeight: 68,
         }}
       >
         <Box
-          component="img"
-          src={Logo}
-          alt="App Logo"
-          sx={{ height: 40, width: 40, transition: "all 0.3s" }}
-        />
-        {isExpanded && (
-          <Box sx={{ ml: 1, fontFamily: "Ubuntu", fontWeight: "bold" }}>
-            MediaLedger
-          </Box>
-        )}
-      </Box>
-
-      {/* Expand / Collapse */}
-      <Box>
-        <ListItemButton
-          onClick={onToggle}
+          onClick={() => navigate("/")}
           sx={{
-            mb: 1,                 // SAME as others
-            height: 56,
-            borderLeft: "5px solid transparent",
-            borderRight: "5px solid transparent",
-            color: "rgba(255,255,255,0.4)",
-            boxSizing: "border-box",
             display: "flex",
-            justifyContent: isExpanded ? "flex-start" : "center",
+            alignItems: "center",
+            cursor: "pointer",
+            gap: 1.25,
           }}
         >
-          <ListItemIcon sx={{ minWidth: 0, color: "rgba(255,255,255,0.4)", mr: isExpanded ? 2 : 0}}>
-            {isExpanded ? <MenuOpen /> : <Menu />}
-          </ListItemIcon>
+          <Box
+            component="img"
+            src={Logo}
+            alt="MediaLedger"
+            sx={{
+              height: 34,
+              width: 34,
+              borderRadius: 1.5,
+              boxShadow: "0 0 16px rgba(51, 140, 255, 0.25)",
+            }}
+          />
           {isExpanded && (
-            <ListItemText
-              primary="Collapse"
-              primaryTypographyProps={{ sx: { fontFamily: "Ubuntu"} }}
-            />
+            <Box>
+              <Typography
+                sx={{
+                  fontFamily: "'Ubuntu', sans-serif",
+                  fontWeight: 800,
+                  fontSize: "1.1rem",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.1,
+                  color: "#FFFFFF",
+                }}
+              >
+                Media<Box component="span" sx={{ color: PLEX_GOLD }}>Ledger</Box>
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#6B7280",
+                  fontSize: "0.65rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Ownership Vault
+              </Typography>
+            </Box>
           )}
-        </ListItemButton>
+        </Box>
+
+        {isExpanded && (
+          <IconButton
+            size="small"
+            onClick={onToggle}
+            sx={{ color: "#6B7280", "&:hover": { color: "#F3F4F6" } }}
+          >
+            <MenuOpen fontSize="small" />
+          </IconButton>
+        )}
       </Box>
 
-      <List sx={{ flexGrow: 1, p: 0 }}>
-        {/* Standard navigation */}
-        {navItems.map((item) => renderListItem(item, location.pathname === item.path))}
+      {!isExpanded && (
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 1.5 }}>
+          <IconButton
+            size="small"
+            onClick={onToggle}
+            sx={{ color: "#9CA3AF", "&:hover": { color: PLEX_GOLD } }}
+          >
+            <Menu fontSize="small" />
+          </IconButton>
+        </Box>
+      )}
 
-        {/* Configuration */}
-        {renderListItem(
-          { label: "Configuration", icon: <Tune />, path: "/configuration" },
-          location.pathname === "/configuration"
+      {/* QUICK ADD TO VAULT BUTTON */}
+      <Box sx={{ px: isExpanded ? 2 : 1.25, mb: 2 }}>
+        {isExpanded ? (
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<AddCircleOutline />}
+            onClick={() => navigate("/create")}
+            sx={{
+              bgcolor: PLEX_GOLD,
+              color: "#FFFFFF",
+              fontWeight: 800,
+              py: 0.9,
+              borderRadius: 2,
+              boxShadow: "0 4px 16px rgba(51, 140, 255, 0.25)",
+              "&:hover": { bgcolor: "#4D9BFF" },
+            }}
+          >
+            Add Owned Media
+          </Button>
+        ) : (
+          <Tooltip title="Add Owned Media" placement="right">
+            <IconButton
+              onClick={() => navigate("/create")}
+              sx={{
+                width: "100%",
+                borderRadius: 2,
+                bgcolor: PLEX_GOLD,
+                color: "#FFFFFF",
+                "&:hover": { bgcolor: "#4D9BFF" },
+              }}
+            >
+              <AddCircleOutline fontSize="small" />
+            </IconButton>
+          </Tooltip>
         )}
+      </Box>
+
+      {/* NAVIGATION SECTIONS */}
+      <List sx={{ flexGrow: 1, p: 0 }}>
+        {mainNavItems.map((item) => renderListItem(item))}
+
+        <Divider sx={{ my: 1.5, mx: 2, borderColor: "rgba(255,255,255,0.06)" }} />
+
+        {isExpanded && (
+          <Typography
+            variant="caption"
+            sx={{
+              px: 2.5,
+              pb: 0.75,
+              display: "block",
+              color: "#6B7280",
+              fontWeight: 800,
+              fontSize: "0.68rem",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
+            Owned Libraries
+          </Typography>
+        )}
+        {libraryNavItems.map((item) => renderListItem(item))}
+
+        <Divider sx={{ my: 1.5, mx: 2, borderColor: "rgba(255,255,255,0.06)" }} />
+
+        {isExpanded && (
+          <Typography
+            variant="caption"
+            sx={{
+              px: 2.5,
+              pb: 0.75,
+              display: "block",
+              color: "#6B7280",
+              fontWeight: 800,
+              fontSize: "0.68rem",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
+            Organization
+          </Typography>
+        )}
+        {curationNavItems.map((item) => renderListItem(item))}
       </List>
     </Box>
   );

@@ -1,191 +1,143 @@
-import { useState, useEffect } from "react";
-import {
-  Box,
-  Card,
-  CardMedia,
-  CardContent,
-  Typography,
-  Alert,
-  Button,
-  Chip,
-} from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { useState, useEffect, useMemo } from "react";
+import { Box, Typography, Button, Paper } from "@mui/material";
+import { Casino as BoardgameIcon, Add as AddIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../../../AppContext";
-
-import FactoryIcon from "@mui/icons-material/Factory";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import WatchLaterIcon from "@mui/icons-material/WatchLater";
+import { API_URL } from "../../../api/client";
+import {
+  LibraryToolbar,
+  MediaPosterCard,
+  MediaLedgerTable,
+  filterAndSortItems,
+} from "../../common/PlexComponents";
 
 export default function Boardgame() {
-  const API = "http://localhost:3001";
   const navigate = useNavigate();
-  const { refreshToken, successMessage } = useApp();
+  const { refreshToken } = useApp();
+
   const [items, setItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [formatFilter, setFormatFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("recent");
+  const [viewMode, setViewMode] = useState("grid");
 
   useEffect(() => {
-    fetch(`${API}/boardgames`)
+    fetch(`${API_URL}/boardgames`)
       .then((res) => res.json())
       .then((data) => setItems(Array.isArray(data) ? data : []))
       .catch(() => setItems([]));
   }, [refreshToken]);
 
+  const availableFormats = useMemo(() => {
+    const set = new Set(items.map((i) => i.format).filter(Boolean));
+    return Array.from(set);
+  }, [items]);
+
+  const displayed = useMemo(
+    () =>
+      filterAndSortItems(items, {
+        searchQuery,
+        ownershipFilter: "all",
+        formatFilter,
+        sortBy,
+      }),
+    [items, searchQuery, formatFilter, sortBy]
+  );
+
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1300, mx: "auto" }}>
-      {/* HEADER */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-          flexWrap: "wrap",
-          gap: 2,
-        }}
-      >
-        <Typography variant="h4" sx={{ fontWeight: 800 }}>
-          Boardgames
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={() => navigate("/boardgames/add")}
+    <Box sx={{ maxWidth: 1440, mx: "auto", pb: 6 }}>
+      <LibraryToolbar
+        title="Boardgames"
+        subtitle="Tabletop Base Games, Deluxe Collector Boxes, Strategy Games & Expansions"
+        icon={<BoardgameIcon />}
+        totalCount={items.length}
+        physicalCount={items.length}
+        digitalCount={0}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        formatFilter={formatFilter}
+        onFormatFilterChange={setFormatFilter}
+        availableFormats={availableFormats}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        addLabel="Add Boardgame"
+        onAddClick={() => navigate("/boardgames/add")}
+      />
+
+      {displayed.length === 0 ? (
+        <Paper
           sx={{
-            bgcolor: "#FF6D00",
-            color: "#fff",
-            fontWeight: 700,
-            "&:hover": { bgcolor: "#e65a00" },
+            p: 6,
+            textAlign: "center",
+            borderRadius: 3,
+            bgcolor: "rgba(22, 25, 34, 0.6)",
+            border: "1px dashed rgba(255,255,255,0.12)",
           }}
         >
-          Add Boardgame
-        </Button>
-      </Box>
-
-      {items.length === 0 && (
-        <Typography>No boardgames found.</Typography>
-      )}
-
-      {successMessage && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          {successMessage}
-        </Alert>
-      )}
-
-      {/* GRID OF CARDS */}
-      <Box
-        sx={{
-          display: "grid",
-          gap: { xs: 3, md: 4 },
-          gridTemplateColumns: {
-            xs: "repeat(1, 1fr)",
-            sm: "repeat(2, 1fr)",
-            md: "repeat(3, 1fr)",
-            lg: "repeat(4, 1fr)",
-          },
-        }}
-      >
-        {items.map((item) => (
-          <Box key={item.id} sx={{ display: "flex", justifyContent: "center" }}>
-            <BoardgameCard
-              item={item}
-              api={API}
-              onClick={() => navigate(`/boardgames/${item.id}`)}
-            />
-          </Box>
-        ))}
-      </Box>
-    </Box>
-  );
-}
-
-function BoardgameCard({ item, api, onClick }) {
-  const theme = useTheme();
-
-  const getBadgeColor = (val) => {
-    const v = Number(val);
-    if (!isFinite(v)) return "default";
-    if (v <= 3) return "success";
-    if (v > 3 && v <= 7) return "warning";
-    if (v > 7 && v <= 9) return "error";
-    return "secondary";
-  };
-
-  return (
-    <Card
-      onClick={onClick}
-      sx={{
-        cursor: "pointer",
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        borderRadius: 3,
-        overflow: "hidden",
-        boxShadow: "0 8px 22px rgba(2,6,23,0.10)",
-        transition: "box-shadow 220ms, transform 180ms",
-        "&:hover": {
-          boxShadow: "0 24px 60px rgba(2,6,23,0.16)",
-        },
-      }}
-    >
-      {/* COVER */}
-      <Box sx={{ width: "100%", paddingTop: "100%", position: "relative", bgcolor: "grey.100" }}>
-        {item.cover_url ? (
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage: `url(${api}/${item.cover_url})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              borderRadius: 3,
-            }}
-          />
-        ) : (
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              display: "grid",
-              placeItems: "center",
-              px: 2,
-              color: "text.secondary",
-            }}
+          <BoardgameIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1.5 }} />
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.75 }}>
+            {items.length === 0 ? "Your Boardgame Shelf is Empty" : "No Matching Boardgames Found"}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 480, mx: "auto" }}>
+            {items.length === 0
+              ? "Catalog your tabletop boardgames, player counts, playtime, complexity weight, and Kallax shelf positions."
+              : "Try clearing your search filters."}
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/boardgames/add")}
           >
-            <Typography>No cover image</Typography>
-          </Box>
-        )}
-        {/* Complexity badge */}
-        <Chip
-          label={item.complexity_weight ?? "-"}
-          size="small"
-          color={getBadgeColor(item.complexity_weight)}
-          sx={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            color: "#fff",
-            fontWeight: 800,
-          }}
+            Add First Boardgame
+          </Button>
+        </Paper>
+      ) : viewMode === "table" ? (
+        <MediaLedgerTable
+          items={displayed}
+          type="boardgame"
+          onRowClick={(item) => navigate(`/boardgames/${item.id}`)}
+          onEditClick={(item) => navigate(`/boardgames/${item.id}/edit`)}
         />
-      </Box>
-
-      {/* DETAILS */}
-      <CardContent sx={{ p: 2 }}>
-        <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.5 }} noWrap>
-          {item.name}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-          <FactoryIcon sx={{ verticalAlign: "middle", mr: 1 }} />
-          Publisher: {item.publisher ?? "-"}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-          <PeopleAltIcon sx={{ verticalAlign: "middle", mr: 1 }} />
-          Players: {item.min_players ?? "?"} - {item.max_players ?? "?"}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          <WatchLaterIcon sx={{ verticalAlign: "middle", mr: 1 }} />
-          Avg playtime: {item.avg_playtime != null ? `${item.avg_playtime} mins` : "-"}
-        </Typography>
-      </CardContent>
-    </Card>
+      ) : (
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2.75,
+            gridTemplateColumns: {
+              xs: "repeat(2, 1fr)",
+              sm: "repeat(3, 1fr)",
+              md: "repeat(4, 1fr)",
+              lg: "repeat(5, 1fr)",
+            },
+          }}
+        >
+          {displayed.map((item) => (
+            <MediaPosterCard
+              key={item.id}
+              item={{
+                ...item,
+                title: item.name,
+                format_badge:
+                  item.min_players && item.max_players
+                    ? `${item.min_players}–${item.max_players} Players`
+                    : item.format,
+                creator_label: [
+                  item.publisher,
+                  item.avg_playtime ? `${item.avg_playtime}m` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" • "),
+              }}
+              type="boardgame"
+              aspectRatio="115%"
+              onClick={() => navigate(`/boardgames/${item.id}`)}
+              onEdit={() => navigate(`/boardgames/${item.id}/edit`)}
+            />
+          ))}
+        </Box>
+      )}
+    </Box>
   );
 }
