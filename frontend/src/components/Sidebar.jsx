@@ -166,7 +166,7 @@ export default function Sidebar({ isExpanded, onToggle }) {
           <Box
             component="img"
             src={Logo}
-            alt="MediaLedger"
+            alt="krate"
             sx={{
               height: 34,
               width: 34,
@@ -180,13 +180,13 @@ export default function Sidebar({ isExpanded, onToggle }) {
                 sx={{
                   fontFamily: "'Ubuntu', sans-serif",
                   fontWeight: 800,
-                  fontSize: "1.1rem",
+                  fontSize: "1.22rem",
                   letterSpacing: "-0.02em",
-                  lineHeight: 1.1,
+                  lineHeight: 1.05,
                   color: "#FFFFFF",
                 }}
               >
-                Media<Box component="span" sx={{ color: PLEX_GOLD }}>Ledger</Box>
+                <Box component="span" sx={{ color: PLEX_GOLD }}>k</Box>rate
               </Typography>
               <Typography
                 variant="caption"

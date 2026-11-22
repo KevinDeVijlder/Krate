@@ -1,5 +1,5 @@
 {
-  "name": "medialedger",
+  "name": "krate",
   "private": true,
   "workspaces": [
     "backend",

@@ -215,7 +215,7 @@ export default function Dashboard() {
           <Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
               <Chip
-                label="PERSONAL OWNERSHIP LEDGER"
+                label="KRATE • PERSONAL OWNERSHIP VAULT"
                 size="small"
                 sx={{
                   bgcolor: "rgba(51, 140, 255, 0.18)",

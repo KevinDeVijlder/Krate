@@ -4,39 +4,21 @@
       <stop offset="0%" stop-color="#161E2E"/>
       <stop offset="100%" stop-color="#0B0E16"/>
     </linearGradient>
-    <linearGradient id="accentGrad" x1="80" y1="80" x2="430" y2="430" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4D9BFF"/>
+    <linearGradient id="kBlue" x1="228" y1="108" x2="325" y2="297" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#338CFF"/>
       <stop offset="100%" stop-color="#1F6FEB"/>
-    </linearGradient>
-    <linearGradient id="bookGrad" x1="92" y1="108" x2="316" y2="394" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#1C2334"/>
-      <stop offset="100%" stop-color="#121622"/>
     </linearGradient>
   </defs>
 
   <!-- Squircle Base -->
   <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bgGrad)" stroke="#338CFF" stroke-width="10"/>
 
-  <!-- Peeking Optical / Blu-ray Disc -->
-  <circle cx="305" cy="246" r="118" fill="url(#accentGrad)"/>
-  <circle cx="305" cy="246" r="86" stroke="rgba(255,255,255,0.35)" stroke-width="5"/>
-  <circle cx="305" cy="246" r="62" stroke="rgba(255,255,255,0.35)" stroke-width="5"/>
-  <circle cx="305" cy="246" r="34" fill="#0F131C"/>
-  <circle cx="305" cy="246" r="20" stroke="#93C5FD" stroke-width="5"/>
+  <!-- 3 Angled Media Spines inside Crate -->
+  <path d="M158 297 L196 147 L245 147 L207 297 Z" fill="#93C5FD"/>
+  <path d="M230 297 L271 110 L320 110 L279 297 Z" fill="url(#kBlue)"/>
+  <path d="M301 297 L335 162 L384 162 L350 297 Z" fill="#38BDF8"/>
 
-  <!-- Ledger Book Drop Shadow -->
-  <rect x="102" y="116" width="224" height="286" rx="28" fill="rgba(5,7,12,0.55)"/>
-
-  <!-- Hardcover Ledger Book / Media Case -->
-  <rect x="92" y="108" width="224" height="286" rx="28" fill="url(#bookGrad)" stroke="#338CFF" stroke-width="8"/>
-  <rect x="92" y="108" width="46" height="286" rx="22" fill="url(#accentGrad)"/>
-
-  <!-- Catalog Ledger Lines -->
-  <line x1="168" y1="172" x2="272" y2="172" stroke="#F3F4F6" stroke-width="12" stroke-linecap="round"/>
-  <line x1="168" y1="216" x2="250" y2="216" stroke="#60A5FA" stroke-width="12" stroke-linecap="round"/>
-  <line x1="168" y1="260" x2="232" y2="260" stroke="#F3F4F6" stroke-width="12" stroke-linecap="round"/>
-
-  <!-- Ownership Checkmark Badge -->
-  <circle cx="250" cy="328" r="34" fill="#338CFF"/>
-  <path d="M236 329L247 340L266 318" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Minimalist White Crate Tray -->
+  <path d="M98 282 L151 282 L151 342 L361 342 L361 282 L414 282 L414 350 C414 378.7 390.7 402 362 402 L150 402 C121.3 402 98 378.7 98 350 Z" fill="#F3F4F6"/>
 </svg>

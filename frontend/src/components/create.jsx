@@ -86,7 +86,7 @@ export default function Create() {
           Add Owned Media to Vault
         </Typography>
         <Typography sx={{ mt: 0.75, color: "text.secondary", maxWidth: 720 }}>
-          Choose the type of media you want to catalog in your personal ownership ledger.
+          Choose the type of media you want to catalog in your personal Krate vault.
         </Typography>
       </Box>
 

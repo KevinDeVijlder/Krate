@@ -30,7 +30,7 @@ app.use("/", vaultRouter);
 
 // Test route
 app.get("/", (req, res) => {
-  res.json({ message: "MediaLedger backend is running" });
+  res.json({ message: "Krate backend is running" });
 });
 
 const PORT = 3001;

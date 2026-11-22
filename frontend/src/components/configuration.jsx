@@ -104,10 +104,10 @@ export default function Configuration() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `medialedger-vault-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `krate-vault-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    notifySuccess("Exported MediaLedger vault backup as JSON");
+    notifySuccess("Exported Krate vault backup as JSON");
   };
 
   const handleExportCsv = () => {
@@ -148,10 +148,10 @@ export default function Configuration() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `medialedger-inventory-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `krate-inventory-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    notifySuccess("Exported MediaLedger inventory as CSV spreadsheet");
+    notifySuccess("Exported Krate inventory as CSV spreadsheet");
   };
 
   const renderChipGrid = (items, setter, endpoint) => (
@@ -198,10 +198,10 @@ export default function Configuration() {
         </Box>
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 800, color: "#FFFFFF" }}>
-            Vault Settings & Ledger Management
+            Krate Settings & Vault Management
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Manage custom platforms, physical/digital formats, shelf tags, and export your media ledger backup
+            Manage custom platforms, physical/digital formats, shelf tags, and export your Krate vault backup
           </Typography>
         </Box>
       </Box>
@@ -346,7 +346,7 @@ export default function Configuration() {
           {tabIndex === 3 && (
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.5 }}>
-                MediaLedger Inventory Summary & Backup
+                Krate Inventory Summary & Backup
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Export your entire catalog of owned physical and digital media for safekeeping or spreadsheet analysis.
